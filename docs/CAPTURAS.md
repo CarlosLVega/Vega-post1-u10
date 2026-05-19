@@ -1,14 +1,21 @@
-# Capturas requeridas
+# Evidencias del analisis SonarQube
 
-Guarda aqui las capturas reales del dashboard de SonarQube despues de ejecutar el analisis.
+Esta carpeta contiene las capturas del analisis inicial realizado sobre el proyecto `Productos Service`.
 
-Nombres esperados por el README:
+## Archivos de evidencia
 
-- `sonar-dashboard.png`: vista general del proyecto Productos Service.
-- `sonar-bugs.png`: detalle de al menos un Bug.
-- `sonar-code-smells.png`: detalle de al menos dos Code Smells.
+- `sonar-dashboard.png`: vista general del dashboard del proyecto.
+- `sonar-bugs.png`: detalle del hallazgo clasificado como Bug.
+- `sonar-code-smells.png`: detalle de los Code Smells principales.
 
-Ruta del dashboard:
+## Proyecto analizado
+
+```text
+Project name: Productos Service
+Project key: com.universidad:productos-service
+```
+
+Dashboard local:
 
 ```text
 http://localhost:9000/dashboard?id=com.universidad%3Aproductos-service

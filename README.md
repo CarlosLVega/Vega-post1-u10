@@ -1,8 +1,8 @@
 # Productos Service - Analisis SonarQube
 
-Proyecto Spring Boot para el laboratorio de la Unidad 10: Metricas de Calidad y SonarQube. El objetivo es ejecutar un analisis inicial sobre codigo intencionalmente imperfecto, integrar JaCoCo para cobertura y documentar los hallazgos encontrados en SonarQube.
+Proyecto Spring Boot desarrollado para el laboratorio de la Unidad 10: Metricas de Calidad y SonarQube. El repositorio contiene una aplicacion con problemas de calidad intencionales, configuracion de JaCoCo para cobertura y configuracion de SonarQube para ejecutar el analisis estatico local.
 
-## Tecnologias
+## Tecnologias utilizadas
 
 - Java 21
 - Spring Boot 3.5.0
@@ -14,7 +14,7 @@ Proyecto Spring Boot para el laboratorio de la Unidad 10: Metricas de Calidad y 
 - JaCoCo
 - SonarQube Community Edition
 
-## Ejecucion local
+## Ejecucion del proyecto
 
 Compilar el proyecto:
 
@@ -22,22 +22,10 @@ Compilar el proyecto:
 mvn compile
 ```
 
-Ejecutar pruebas y generar cobertura JaCoCo:
+Ejecutar pruebas y generar el reporte de cobertura:
 
 ```bash
 mvn clean verify
-```
-
-Si Windows o OneDrive bloquea archivos dentro de `target`, cerrar el IDE o pausar la sincronizacion y volver a ejecutar el comando. En este equipo se verifico correctamente con:
-
-```bash
-mvn verify
-```
-
-El reporte XML de cobertura se genera en:
-
-```text
-target/site/jacoco/jacoco.xml
 ```
 
 Ejecutar la aplicacion:
@@ -46,9 +34,15 @@ Ejecutar la aplicacion:
 mvn spring-boot:run
 ```
 
-## SonarQube local
+La aplicacion usa una base de datos H2 en memoria y deja disponible la consola H2 en:
 
-Levantar SonarQube con Docker:
+```text
+http://localhost:8080/h2-console
+```
+
+## Configuracion de SonarQube
+
+Levantar SonarQube Community Edition con Docker:
 
 ```bash
 docker run -d ^
@@ -58,14 +52,14 @@ docker run -d ^
   sonarqube:community
 ```
 
-Verificar el contenedor:
+Verificar el estado del contenedor:
 
 ```bash
 docker ps
 docker logs -f sonarqube
 ```
 
-Acceder a:
+Acceder al dashboard local:
 
 ```text
 http://localhost:9000
@@ -77,20 +71,20 @@ Credenciales iniciales:
 admin / admin
 ```
 
-Crear un proyecto manual con estos datos:
+Datos del proyecto creado en SonarQube:
 
 ```text
 Project name: Productos Service
 Project key: com.universidad:productos-service
 ```
 
-Luego generar un token y ejecutar el analisis:
+Ejecutar el analisis con el token generado en SonarQube:
 
 ```bash
 mvn clean verify sonar:sonar -Dsonar.token=TU_TOKEN
 ```
 
-Dashboard esperado:
+Dashboard del proyecto:
 
 ```text
 http://localhost:9000/dashboard?id=com.universidad%3Aproductos-service
@@ -98,13 +92,11 @@ http://localhost:9000/dashboard?id=com.universidad%3Aproductos-service
 
 ## Estado inicial del analisis
 
-> Importante: los valores de Bugs, Vulnerabilidades, Code Smells y Ratings deben copiarse del dashboard real de SonarQube despues de ejecutar el analisis. La cobertura JaCoCo verificada localmente fue aproximadamente 17.1%.
-
 | Categoria | Cantidad | Rating |
 |-----------|----------|--------|
-| Bugs | Pendiente de dashboard | Pendiente |
-| Vulnerabilidades | Pendiente de dashboard | Pendiente |
-| Code Smells | Pendiente de dashboard | Pendiente |
+| Bugs | 1 | C |
+| Vulnerabilidades | 0 | A |
+| Code Smells | 5 | B |
 | Cobertura | 17.1% | - |
 
 ## Hallazgos principales identificados
@@ -112,13 +104,13 @@ http://localhost:9000/dashboard?id=com.universidad%3Aproductos-service
 ### Bug 1: Producto inexistente retorna null
 
 - Archivo: `src/main/java/com/universidad/productosservice/service/ProductoService.java`, linea 47
-- Descripcion: el metodo `buscar` usa `orElse(null)`, por lo que el servicio puede devolver `null` cuando el producto no existe. Esto obliga a los consumidores a manejar nulos y puede provocar errores en tiempo de ejecucion.
+- Descripcion: el metodo `buscar` usa `orElse(null)`, por lo que el servicio puede devolver `null` cuando el producto no existe. Esto obliga a los consumidores del metodo a validar manualmente el resultado y puede provocar errores en tiempo de ejecucion.
 - Severidad: Major
 
 ### Code Smell 1: Inyeccion de dependencia por campo
 
 - Archivo: `src/main/java/com/universidad/productosservice/service/ProductoService.java`, linea 14
-- Descripcion: `ProductoRepository` se inyecta con `@Autowired` sobre un campo mutable. La practica recomendada es usar inyeccion por constructor y declarar la dependencia como `final`.
+- Descripcion: `ProductoRepository` se inyecta con `@Autowired` sobre un campo mutable. La practica recomendada es utilizar inyeccion por constructor para mejorar la claridad, facilitar pruebas y evitar dependencias mutables.
 - Severidad: Major
 
 ### Code Smell 2: Nombre de dependencia poco descriptivo
@@ -130,37 +122,58 @@ http://localhost:9000/dashboard?id=com.universidad%3Aproductos-service
 ### Code Smell 3: Validacion de texto incompleta
 
 - Archivo: `src/main/java/com/universidad/productosservice/service/ProductoService.java`, linea 21
-- Descripcion: la validacion `n == null || n.equals("")` no rechaza cadenas con solo espacios. `isBlank()` expresaria mejor la regla de negocio.
+- Descripcion: la validacion `n == null || n.equals("")` no rechaza cadenas formadas solo por espacios. Una validacion con `isBlank()` expresaria mejor la regla de negocio.
 - Severidad: Minor
 
 ### Code Smell 4: Logica de negocio dentro de una entidad JPA
 
 - Archivo: `src/main/java/com/universidad/productosservice/domain/Producto.java`, linea 53
-- Descripcion: `getEstado` contiene reglas de negocio y multiples ramas dentro de la entidad. Esto aumenta la complejidad de la clase de persistencia.
+- Descripcion: el metodo `getEstado` contiene reglas de negocio y multiples ramas dentro de la entidad. Esto aumenta la complejidad de la clase de persistencia y mezcla responsabilidades.
 - Severidad: Major
 
 ### Code Smell 5: Rama final inalcanzable
 
 - Archivo: `src/main/java/com/universidad/productosservice/domain/Producto.java`, linea 61
-- Descripcion: despues de evaluar todos los casos de `stock`, el ultimo `return "DESCONOCIDO"` queda como una rama defensiva que no se alcanza para valores enteros validos.
+- Descripcion: despues de evaluar los casos posibles de `stock`, el ultimo `return "DESCONOCIDO"` queda como una rama defensiva que no se alcanza para valores enteros validos.
 - Severidad: Minor
 
 ## Capturas del dashboard
 
-Agregar las capturas reales generadas despues de ejecutar SonarQube:
-
 ![Dashboard SonarQube](docs/sonar-dashboard.png)
+
 ![Detalle Bugs](docs/sonar-bugs.png)
+
 ![Detalle Code Smells](docs/sonar-code-smells.png)
 
-Las imagenes deben guardarse con esos nombres dentro de la carpeta `docs/`.
+## Evidencia de configuracion
 
-## Checkpoints de verificacion
+El archivo `sonar-project.properties` define el proyecto, las rutas de codigo fuente, las pruebas, los binarios compilados y el reporte XML generado por JaCoCo:
 
-- El proyecto compila con `mvn compile`.
-- Las clases `Producto`, `ProductoRepository` y `ProductoService` estan creadas en los paquetes requeridos.
-- JaCoCo esta configurado en `pom.xml` con las fases `prepare-agent` y `report`.
-- `sonar-project.properties` esta en la raiz del proyecto y apunta a `http://localhost:9000`.
-- `mvn verify` genera `target/site/jacoco/jacoco.xml`.
-- Al ejecutar SonarQube localmente, el dashboard debe mostrar al menos 1 Bug, al menos 3 Code Smells y la cobertura del proyecto.
-- El repositorio debe tener minimo 3 commits descriptivos: setup inicial, codigo con problemas, analisis documentado.
+```properties
+sonar.projectKey=com.universidad:productos-service
+sonar.projectName=Productos Service
+sonar.projectVersion=1.0
+sonar.sources=src/main/java
+sonar.tests=src/test/java
+sonar.java.binaries=target/classes
+sonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+sonar.exclusions=**/*Application.java
+sonar.host.url=http://localhost:9000
+sonar.qualitygate.wait=false
+```
+
+El plugin JaCoCo esta configurado en `pom.xml` con las fases `prepare-agent` y `report`, permitiendo generar el archivo:
+
+```text
+target/site/jacoco/jacoco.xml
+```
+
+## Commits realizados
+
+1. `setup inicial del proyecto Spring Boot`
+2. `agrega codigo imperfecto y configuracion SonarQube JaCoCo`
+3. `documenta analisis inicial SonarQube`
+
+## Conclusiones
+
+El analisis inicial evidencia problemas de mantenibilidad y posibles errores de comportamiento en el servicio. El objetivo de esta primera revision no es corregir los hallazgos, sino identificarlos, clasificarlos y dejar documentado el estado base del proyecto antes de aplicar mejoras en una siguiente iteracion.

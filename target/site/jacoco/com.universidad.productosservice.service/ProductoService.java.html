@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="es"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductoService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Productos Service</a> &gt; <a href="index.source.html" class="el_package">com.universidad.productosservice.service</a> &gt; <span class="el_source">ProductoService.java</span></div><h1>ProductoService.java</h1><pre class="source lang-java linenums">package com.universidad.productosservice.service;
+
+import com.universidad.productosservice.domain.Producto;
+import com.universidad.productosservice.repository.ProductoRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+<span class="fc" id="L11">public class ProductoService {</span>
+
+    // Code Smell: campo no final (deberia ser inyeccion por constructor)
+    @Autowired
+    private ProductoRepository repo; // Code Smell: nombre generico
+
+    // Code Smell: metodo largo con multiples responsabilidades (CC alta)
+    public Producto procesarProducto(String n, Double p, Integer s,
+                                     String cat, boolean activo, String proveedor) {
+<span class="nc" id="L20">        Producto producto = new Producto();</span>
+<span class="nc bnc" id="L21" title="All 4 branches missed.">        if (n == null || n.equals(&quot;&quot;)) { // Code Smell: usar isBlank()</span>
+<span class="nc" id="L22">            throw new IllegalArgumentException(&quot;nombre requerido&quot;);</span>
+        }
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        if (p == null) {</span>
+<span class="nc" id="L25">            throw new IllegalArgumentException(&quot;precio requerido&quot;);</span>
+<span class="nc bnc" id="L26" title="All 2 branches missed.">        } else if (p &lt;= 0) {</span>
+<span class="nc" id="L27">            throw new IllegalArgumentException(&quot;precio invalido&quot;);</span>
+<span class="nc bnc" id="L28" title="All 2 branches missed.">        } else if (p &gt; 999999) {</span>
+<span class="nc" id="L29">            throw new IllegalArgumentException(&quot;precio excesivo&quot;);</span>
+        }
+<span class="nc bnc" id="L31" title="All 4 branches missed.">        if (s == null || s &lt; 0) {</span>
+<span class="nc" id="L32">            throw new IllegalArgumentException(&quot;stock invalido&quot;);</span>
+        }
+<span class="nc" id="L34">        producto.setNombre(n);</span>
+<span class="nc" id="L35">        producto.setPrecio(p);</span>
+<span class="nc" id="L36">        producto.setStock(s);</span>
+        // TODO: implementar logica de categoria y proveedor
+<span class="nc" id="L38">        return repo.save(producto);</span>
+    }
+
+    public List&lt;Producto&gt; listar() {
+<span class="nc" id="L42">        return repo.findAll();</span>
+    }
+
+    // Bug: no lanza excepcion si el producto no existe
+    public Producto buscar(Long id) {
+<span class="nc" id="L47">        return repo.findById(id).orElse(null); // Bug: retorna null</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.13.202504020838</span></div></body></html>
